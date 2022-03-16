@@ -1,0 +1,38 @@
+name: Flutter tests on pull rquest
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup Dart
+        uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+
+      - name: Setup Flutter with FVM
+        run: |
+          make
+          export PATH="$PATH":"$HOME/.pub-cache/bin"
+
+      - name: Analyze project
+        run: melos run analyze
+
+      - name: Format lib files
+        run: melos run format
+
+      - name: Run unit tests
+        run: melos run test
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v2
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ~/coverage/lcov.info
+          fail_ci_if_error: false
